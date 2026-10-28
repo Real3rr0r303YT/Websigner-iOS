@@ -114,6 +114,7 @@ jobs:
         env:
           P12_PASSWORD: ${{ secrets.WEBSIGNER_P12_PASSWORD }}
         run: |
+          mkdir -p "$RUNNER_TEMP/ws/tmp"
           args=(-f -z 9 -k "$RUNNER_TEMP/ws/cert.p12" -p "$P12_PASSWORD" -m "$RUNNER_TEMP/ws/profile.mobileprovision")
           [ -n "$NEW_BUNDLE_ID" ] && args+=(-b "$NEW_BUNDLE_ID")
           [ -n "$NEW_NAME" ] && args+=(-n "$NEW_NAME")
@@ -166,3 +167,4 @@ jobs:
       - name: Remove key material
         if: always()
         run: rm -rf "$RUNNER_TEMP/ws" .upload
+        
