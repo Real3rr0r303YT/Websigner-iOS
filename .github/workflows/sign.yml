@@ -1,0 +1,168 @@
+# Signs an IPA uploaded from the Web Signer on the landing page (js/signer.js).
+#
+# The page stores the certificate, its password, the provisioning profile and
+# the IPA's AES key as temporary Actions secrets, commits the encrypted IPA to
+# a temporary "websigner-upload/<id>" branch and dispatches this workflow.
+# The signed IPA goes to the "websigner" release and its manifest to
+# signed/<id>.plist on the default branch, where GitHub Pages serves it.
+name: Web Signer
+run-name: "Sign ${{ inputs.job_id }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: "Job ID (set by the web page)"
+        required: true
+      upload_branch:
+        description: "Branch holding upload.ipa.enc"
+        required: true
+      sha256:
+        description: "SHA-256 of the original IPA"
+        required: true
+      bundle_id:
+        description: "New bundle identifier (optional)"
+        required: false
+        default: ""
+      display_name:
+        description: "New display name (optional)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+concurrency:
+  group: websigner
+  cancel-in-progress: false
+
+env:
+  ZSIGN_REPO: https://github.com/zhlynn/zsign.git
+  ZSIGN_COMMIT: 614caa8d1ca949e260e5746144aa52d27a4b08d6 # v1.1.2
+  RELEASE_TAG: websigner
+
+jobs:
+  sign:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GH_TOKEN: ${{ github.token }}
+      JOB_ID: ${{ inputs.job_id }}
+      UPLOAD_BRANCH: ${{ inputs.upload_branch }}
+      IPA_SHA256: ${{ inputs.sha256 }}
+      NEW_BUNDLE_ID: ${{ inputs.bundle_id }}
+      NEW_NAME: ${{ inputs.display_name }}
+    steps:
+      - name: Validate inputs
+        run: |
+          [[ "$JOB_ID" =~ ^[a-z0-9]{8,32}$ ]] || { echo "::error::Invalid job_id"; exit 1; }
+          [[ "$UPLOAD_BRANCH" == "websigner-upload/$JOB_ID" ]] || { echo "::error::Invalid upload_branch"; exit 1; }
+          [[ "$IPA_SHA256" =~ ^[0-9a-f]{64}$ ]] || { echo "::error::Invalid sha256"; exit 1; }
+          [[ -z "$NEW_BUNDLE_ID" || "$NEW_BUNDLE_ID" =~ ^[A-Za-z0-9.-]+$ ]] || { echo "::error::Invalid bundle_id"; exit 1; }
+          [[ ${#NEW_NAME} -le 64 ]] || { echo "::error::display_name too long"; exit 1; }
+
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Fetch upload
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.upload_branch }}
+          path: .upload
+
+      - name: Restore zsign
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.zsign/zsign
+          key: zsign-${{ runner.os }}-${{ env.ZSIGN_COMMIT }}
+
+      - name: Build zsign
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq g++ pkg-config libssl-dev
+          git init -q "$RUNNER_TEMP/zsign"
+          cd "$RUNNER_TEMP/zsign"
+          git fetch -q --depth 1 "$ZSIGN_REPO" "$ZSIGN_COMMIT"
+          git checkout -q FETCH_HEAD
+          make -C build/linux -j"$(nproc)" VERSION=1.1.2
+          mkdir -p ~/.zsign
+          cp bin/zsign ~/.zsign/zsign
+
+      - name: Decrypt inputs
+        env:
+          P12_BASE64: ${{ secrets.WEBSIGNER_P12_BASE64 }}
+          PROFILE_BASE64: ${{ secrets.WEBSIGNER_PROFILE_BASE64 }}
+          UPLOAD_KEY: ${{ secrets.WEBSIGNER_UPLOAD_KEY }}
+        run: |
+          umask 077
+          if [ -z "$P12_BASE64" ] || [ -z "$PROFILE_BASE64" ] || [ -z "$UPLOAD_KEY" ]; then
+            echo "::error::Signing secrets are missing. Start signing from the web page."
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/ws"
+          echo "$P12_BASE64" | base64 --decode > "$RUNNER_TEMP/ws/cert.p12"
+          echo "$PROFILE_BASE64" | base64 --decode > "$RUNNER_TEMP/ws/profile.mobileprovision"
+          openssl enc -d -aes-256-ctr -K "${UPLOAD_KEY%%:*}" -iv "${UPLOAD_KEY##*:}" \
+            -in .upload/upload.ipa.enc -out "$RUNNER_TEMP/ws/input.ipa"
+          echo "$IPA_SHA256  $RUNNER_TEMP/ws/input.ipa" | sha256sum --check --status \
+            || { echo "::error::The decrypted IPA doesn't match the uploaded file."; exit 1; }
+
+      - name: Sign
+        env:
+          P12_PASSWORD: ${{ secrets.WEBSIGNER_P12_PASSWORD }}
+        run: |
+          args=(-f -z 9 -k "$RUNNER_TEMP/ws/cert.p12" -p "$P12_PASSWORD" -m "$RUNNER_TEMP/ws/profile.mobileprovision")
+          [ -n "$NEW_BUNDLE_ID" ] && args+=(-b "$NEW_BUNDLE_ID")
+          [ -n "$NEW_NAME" ] && args+=(-n "$NEW_NAME")
+          mkdir -p dist
+          ~/.zsign/zsign "${args[@]}" -t "$RUNNER_TEMP/ws/tmp" -o "dist/$JOB_ID.ipa" "$RUNNER_TEMP/ws/input.ipa"
+
+      - name: Validate signed IPA and write manifest
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          repo="${GITHUB_REPOSITORY#*/}"
+          if [ "${repo,,}" = "${owner}.github.io" ]; then pages="https://${owner}.github.io"; else pages="https://${owner}.github.io/${repo}"; fi
+          mkdir -p signed
+          python3 tools/check_ipa.py "dist/$JOB_ID.ipa" \
+            --write-manifest "signed/$JOB_ID.plist" \
+            --ipa-url "https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE_TAG}/${JOB_ID}.ipa" \
+            --display-image "${pages}/assets/icon-57.png" \
+            --full-size-image "${pages}/assets/icon-512.png"
+
+      - name: Upload signed IPA
+        run: |
+          if ! gh release view "$RELEASE_TAG" > /dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --prerelease --target "$GITHUB_SHA" \
+              --title "WebSigner: signed apps" \
+              --notes "IPAs signed with the Web Signer. Install them from the landing page."
+          fi
+          gh release upload "$RELEASE_TAG" "dist/$JOB_ID.ipa" --clobber
+
+      - name: Publish manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add "signed/$JOB_ID.plist"
+          git commit -q -m "WebSigner: add manifest for $JOB_ID"
+          for attempt in 1 2 3 4; do
+            git pull -q --rebase && git push -q && exit 0
+            sleep $((attempt * 3))
+          done
+          echo "::error::Couldn't push signed/$JOB_ID.plist"
+          exit 1
+
+      - name: Summary
+        run: |
+          {
+            echo "### Signed \`$JOB_ID\`"
+            echo
+            echo "- IPA: https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE_TAG}/${JOB_ID}.ipa"
+            echo "- Manifest: \`signed/$JOB_ID.plist\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove key material
+        if: always()
+        run: rm -rf "$RUNNER_TEMP/ws" .upload

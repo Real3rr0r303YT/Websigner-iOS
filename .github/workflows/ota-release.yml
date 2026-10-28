@@ -1,0 +1,81 @@
+# Validates the .ipa attached to a GitHub Release and regenerates manifest.plist
+# so its URL, bundle ID and version always match the IPA actually being served.
+#
+# Runs automatically after "Build IPA", when a Release is published with an
+# .ipa attached, or manually from the Actions tab with a tag.
+name: OTA release
+
+on:
+  release:
+    types: [published]
+  workflow_call:
+    inputs:
+      tag:
+        type: string
+        required: true
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag whose .ipa should be published (e.g. v1.2.0)"
+        required: true
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ota-release
+  cancel-in-progress: false
+
+jobs:
+  manifest:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ inputs.tag || github.event.release.tag_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Download IPA from release
+        id: ipa
+        run: |
+          mkdir -p dist
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern '*.ipa' --dir dist || true
+          count=$(find dist -maxdepth 1 -name '*.ipa' | wc -l)
+          if [ "$count" -eq 0 ] && [ "$GITHUB_EVENT_NAME" = "release" ]; then
+            echo "::notice::Release $TAG has no .ipa yet; skipping. Build IPA will update the manifest once it uploads one."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$count" -ne 1 ]; then
+            echo "::error::Release $TAG must have exactly one .ipa asset (found $count)."
+            exit 1
+          fi
+          echo "IPA_NAME=$(basename dist/*.ipa)" >> "$GITHUB_ENV"
+
+      - name: Validate IPA and generate manifest.plist
+        if: steps.ipa.outputs.skip != 'true'
+        run: |
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          repo="${GITHUB_REPOSITORY#*/}"
+          pages="https://${owner}.github.io/${repo}"
+          ipa_url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${IPA_NAME// /%20}"
+          python3 tools/check_ipa.py "dist/${IPA_NAME}" \
+            --write-manifest manifest.plist \
+            --ipa-url "$ipa_url" \
+            --display-image "${pages}/assets/icon-57.png" \
+            --full-size-image "${pages}/assets/icon-512.png"
+
+      - name: Commit manifest.plist
+        if: steps.ipa.outputs.skip != 'true'
+        run: |
+          if git diff --quiet -- manifest.plist; then
+            echo "manifest.plist already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898299+github-actions[bot]@users.noreply.github.com"
+          git add manifest.plist
+          git commit -m "Update manifest.plist for ${TAG}"
+          git push

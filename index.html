@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="WebSigner — an open-source direct web installer and signer for iOS. Install apps over the air, no computer required.">
+  <meta name="theme-color" content="#0b0d12">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>WebSigner for iOS</title>
+  <style>
+    :root {
+      --bg: #0b0d12;
+      --bg-elev: #12151d;
+      --bg-card: #161a24;
+      --border: #242a38;
+      --text: #e8ebf2;
+      --text-muted: #9aa3b5;
+      --accent: #4f8cff;
+      --accent-2: #8a5cff;
+      --success: #2ecc8f;
+      --warning: #ffb347;
+      --coffee: #ffdd00;
+      --radius: 16px;
+      --max: 1080px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    [hidden] { display: none !important; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    code {
+      font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+      background: #1e2330;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.1em 0.4em;
+      font-size: 0.9em;
+      color: #c9d6ff;
+      overflow-wrap: anywhere;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* ---------- Nav ---------- */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(11, 13, 18, 0.8);
+      backdrop-filter: saturate(180%) blur(14px);
+      -webkit-backdrop-filter: saturate(180%) blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    nav .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--text);
+    }
+    .brand:hover { text-decoration: none; }
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: grid;
+      place-items: center;
+    }
+    .nav-links { display: flex; gap: 22px; }
+    .nav-links a { color: var(--text-muted); font-size: 0.95rem; }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+
+    /* ---------- Hero ---------- */
+    .hero {
+      position: relative;
+      padding: 96px 0 72px;
+      text-align: center;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: -120px 0 auto 0;
+      height: 520px;
+      background:
+        radial-gradient(600px 300px at 30% 30%, rgba(79, 140, 255, 0.22), transparent 70%),
+        radial-gradient(500px 280px at 70% 40%, rgba(138, 92, 255, 0.18), transparent 70%);
+      z-index: -1;
+      pointer-events: none;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--bg-elev);
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-bottom: 24px;
+    }
+    .badge .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 10px var(--success);
+    }
+    .hero h1 {
+      font-size: clamp(2.3rem, 6vw, 4rem);
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 18px;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #7fb0ff, #b495ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .hero p.lead {
+      font-size: clamp(1.05rem, 2.2vw, 1.25rem);
+      color: var(--text-muted);
+      max-width: 640px;
+      margin: 0 auto 36px;
+    }
+
+    .cta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: center;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 15px 28px;
+      border-radius: 14px;
+      font-size: 1.05rem;
+      font-weight: 600;
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
+      min-width: 210px;
+    }
+    .btn:hover { text-decoration: none; transform: translateY(-2px); }
+    .btn:active { transform: translateY(0); }
+    .btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      box-shadow: 0 10px 30px -10px rgba(79, 140, 255, 0.7);
+    }
+    .btn-primary:hover { box-shadow: 0 14px 36px -10px rgba(79, 140, 255, 0.9); }
+
+    .btn-coffee {
+      background: var(--coffee);
+      color: #000;
+      box-shadow: 0 10px 30px -12px rgba(255, 221, 0, 0.6);
+    }
+
+    .btn-ghost {
+      background: var(--bg-elev);
+      color: var(--text);
+      border-color: var(--border);
+    }
+
+    .device-note {
+      margin-top: 20px;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    .device-note.warn { color: var(--warning); }
+
+    /* ---------- Sections ---------- */
+    section { padding: 72px 0; }
+    section + section { border-top: 1px solid var(--border); }
+    section[id] { scroll-margin-top: 60px; }
+
+    .section-head { text-align: center; margin-bottom: 44px; }
+    .section-head .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+    .section-head h2 {
+      font-size: clamp(1.7rem, 4vw, 2.4rem);
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+    .section-head p { color: var(--text-muted); max-width: 640px; margin: 0 auto; }
+
+    /* ---------- Features ---------- */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+    }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 26px;
+    }
+    .card .icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: rgba(79, 140, 255, 0.12);
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+    .card .icon svg { width: 22px; height: 22px; }
+    .card h3 { font-size: 1.1rem; margin-bottom: 8px; }
+    .card p { color: var(--text-muted); font-size: 0.96rem; }
+
+    /* ---------- Guide ---------- */
+    .steps { display: grid; gap: 16px; counter-reset: step; }
+    .step {
+      position: relative;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 24px 24px 76px;
+    }
+    .step::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      left: 22px;
+      top: 22px;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+    }
+    .step h3 { font-size: 1.08rem; margin-bottom: 6px; }
+    .step p, .step li { color: var(--text-muted); font-size: 0.97rem; }
+    .step ul { margin: 10px 0 0 18px; }
+    .step li { margin-bottom: 4px; }
+
+    .domain-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    .domain {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+      font-size: 0.9rem;
+      padding: 8px 12px;
+      border-radius: 10px;
+      background: #1e2330;
+      border: 1px solid var(--border);
+      color: #c9d6ff;
+    }
+    .domain.required { border-color: rgba(46, 204, 143, 0.5); }
+    .domain button {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .domain button:hover { color: var(--text); background: rgba(255,255,255,0.06); }
+
+    .callout {
+      margin-top: 22px;
+      padding: 18px 20px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 179, 71, 0.35);
+      background: rgba(255, 179, 71, 0.07);
+      color: #f3d3a5;
+      font-size: 0.95rem;
+    }
+    .callout strong { color: var(--warning); }
+
+    /* ---------- Support ---------- */
+    .support-card {
+      text-align: center;
+      background:
+        radial-gradient(400px 200px at 50% 0%, rgba(255, 221, 0, 0.09), transparent 70%),
+        var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 48px 24px;
+    }
+    .support-card h2 { font-size: clamp(1.5rem, 3.5vw, 2rem); margin-bottom: 10px; }
+    .support-card p { color: var(--text-muted); max-width: 520px; margin: 0 auto 28px; }
+
+    /* ---------- Footer ---------- */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 40px 0 calc(40px + env(safe-area-inset-bottom));
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    footer .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .license {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .license-badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: #1e2330;
+      border: 1px solid var(--border);
+      font-weight: 700;
+      font-size: 0.8rem;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    footer .links { display: flex; gap: 18px; flex-wrap: wrap; }
+    footer .links a { color: var(--text-muted); }
+    footer .links a:hover { color: var(--text); }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 28px;
+      transform: translateX(-50%) translateY(120px);
+      background: var(--bg-elev);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      transition: transform 0.25s ease;
+      z-index: 20;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* ---------- Web Signer ---------- */
+    .signer-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 18px;
+      align-items: start;
+    }
+    .signer-card h3 { font-size: 1.15rem; margin-bottom: 4px; }
+    .signer-card > p { color: var(--text-muted); font-size: 0.93rem; margin-bottom: 18px; }
+
+    .dropzone {
+      position: relative;
+      display: block;
+      border: 1.5px dashed var(--border);
+      border-radius: 14px;
+      padding: 16px 18px;
+      margin-bottom: 12px;
+      background: var(--bg-elev);
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .dropzone:hover, .dropzone.drag { border-color: var(--accent); background: rgba(79, 140, 255, 0.06); }
+    .dropzone.has-file { border-style: solid; }
+    .dropzone input[type=file] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+    }
+    .dropzone-title { font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .dropzone-title svg { width: 18px; height: 18px; color: var(--accent); flex-shrink: 0; }
+    .dropzone-name { color: var(--text-muted); font-size: 0.88rem; margin-top: 2px; overflow-wrap: anywhere; }
+
+    .ws-checks { list-style: none; margin: -4px 0 12px; font-size: 0.88rem; }
+    .ws-checks:empty { display: none; }
+    .ws-checks li { display: flex; gap: 8px; padding: 2px 0; }
+    .ws-checks .ws-icon { width: 16px; flex-shrink: 0; text-align: center; font-weight: 700; }
+    .ws-checks .ws-ok { color: var(--text-muted); }
+    .ws-checks .ws-ok .ws-icon { color: var(--success); }
+    .ws-checks .ws-warn { color: #f3d3a5; }
+    .ws-checks .ws-warn .ws-icon { color: var(--warning); }
+    .ws-checks .ws-err { color: #ffb4b4; }
+    .ws-checks .ws-err .ws-icon { color: #ff6b6b; }
+
+    .field { display: block; margin-bottom: 12px; }
+    .field span { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 5px; }
+    .field input[type=text], .field input[type=password] {
+      width: 100%;
+      padding: 11px 13px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-elev);
+      color: var(--text);
+      font: inherit;
+      font-size: 16px; /* prevents iOS zoom on focus */
+    }
+    .field input:focus { outline: none; border-color: var(--accent); }
+    .check { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; color: var(--text-muted); margin-bottom: 14px; }
+
+    details.ws-more { margin: 4px 0 14px; }
+    details.ws-more summary { cursor: pointer; color: var(--accent); font-size: 0.92rem; margin-bottom: 10px; }
+    details.ws-more p, details.ws-more li { color: var(--text-muted); font-size: 0.88rem; }
+    details.ws-more ul { margin: 6px 0 10px 18px; }
+
+    .btn[disabled] { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+    .btn.disabled { opacity: 0.45; pointer-events: none; }
+    #ws-start { width: 100%; }
+    .ws-hint { color: var(--text-muted); font-size: 0.85rem; margin-top: 8px; min-height: 1.2em; }
+
+    .ws-steps { list-style: none; margin-top: 18px; display: grid; gap: 8px; }
+    .ws-steps li { display: grid; grid-template-columns: 14px 1fr; column-gap: 10px; align-items: center; font-size: 0.93rem; }
+    .ws-step-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+    .ws-step-detail { grid-column: 2; color: var(--text-muted); font-size: 0.83rem; overflow-wrap: anywhere; }
+    .ws-step-detail:empty { display: none; }
+    .ws-steps li.pending { color: var(--text-muted); }
+    .ws-steps li.active .ws-step-dot { background: var(--accent); box-shadow: 0 0 0 4px rgba(79, 140, 255, 0.25); animation: ws-pulse 1.2s ease-in-out infinite; }
+    .ws-steps li.done .ws-step-dot { background: var(--success); }
+    .ws-steps li.failed { color: #ffb4b4; }
+    .ws-steps li.failed .ws-step-dot { background: #ff6b6b; }
+    @keyframes ws-pulse { 50% { box-shadow: 0 0 0 7px rgba(79, 140, 255, 0.08); } }
+
+    .ws-error {
+      margin-top: 16px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 107, 107, 0.4);
+      background: rgba(255, 107, 107, 0.08);
+      color: #ffc9c9;
+      font-size: 0.92rem;
+    }
+
+    .ws-result {
+      margin-top: 18px;
+      padding: 20px;
+      border-radius: 16px;
+      border: 1px solid rgba(46, 204, 143, 0.4);
+      background: rgba(46, 204, 143, 0.06);
+      text-align: center;
+    }
+    .ws-result h4 { font-size: 1.1rem; margin-bottom: 14px; }
+    .ws-result .btn { width: 100%; }
+    .ws-qr { width: 180px; max-width: 70%; margin: 18px auto 8px; background: #fff; border-radius: 12px; padding: 8px; }
+    .ws-qr svg { display: block; width: 100%; height: auto; }
+    .ws-result p { color: var(--text-muted); font-size: 0.85rem; overflow-wrap: anywhere; }
+    .ws-result .links { margin-top: 10px; display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; font-size: 0.88rem; }
+
+    .install-panel {
+      max-width: 520px;
+      margin: 0 auto 40px;
+      padding: 24px;
+      border-radius: 18px;
+      border: 1px solid rgba(46, 204, 143, 0.4);
+      background: rgba(46, 204, 143, 0.06);
+    }
+    .install-panel h2 { font-size: 1.3rem; margin-bottom: 14px; }
+    .install-panel .btn { width: 100%; }
+
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .hero { padding: 64px 0 52px; }
+      section { padding: 56px 0; }
+      .btn { width: 100%; }
+      .step { padding: 70px 20px 22px; }
+      .step::before { left: 20px; top: 20px; }
+      footer .container { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container">
+      <a href="#" class="brand">
+        <span class="brand-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+        </span>
+        WebSigner
+      </a>
+      <div class="nav-links">
+        <a href="#signer">Web Signer</a>
+        <a href="#features">Features</a>
+        <a href="#guide">Anti-Revoke Guide</a>
+        <a href="#support">Support</a>
+        <a href="https://github.com/Real3rr0r303YT/Websigner-iOS" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="hero">
+    <div class="container">
+      <div class="install-panel" id="ws-install-panel" hidden>
+        <h2 id="ws-install-title">Install signed app</h2>
+        <a class="btn btn-primary" id="ws-install-direct" href="#">Install</a>
+        <p class="device-note">After tapping Install, go to your Home Screen to watch the download.</p>
+      </div>
+      <span class="badge"><span class="dot"></span> v1.3.0 &middot; Open source &middot; GPL-3.0</span>
+      <h1>Install iOS apps<br><span class="gradient-text">straight from the web.</span></h1>
+      <p class="lead">
+        WebSigner is a free, open-source direct web installer and signer for iOS.
+        No computer, no cables, no App Store. Just tap and install.
+      </p>
+
+      <div class="cta-row">
+        <!--
+          OTA install link. Replace the url= value with the HTTPS URL of YOUR
+          manifest.plist (URL-encoded). It must be served over HTTPS with a
+          valid certificate. GitHub Pages works out of the box.
+        -->
+        <a id="install-btn" class="btn btn-primary"
+           href="itms-services://?action=download-manifest&amp;url=https%3A%2F%2Freal3rr0r303yt.github.io%2FWebsigner-iOS%2Fmanifest.plist">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.37 12.62c-.02-2.3 1.88-3.4 1.96-3.46-1.07-1.56-2.73-1.78-3.32-1.8-1.41-.14-2.76.83-3.47.83-.72 0-1.82-.81-2.99-.79-1.54.02-2.96.9-3.75 2.27-1.6 2.78-.41 6.89 1.15 9.14.76 1.1 1.67 2.34 2.86 2.3 1.15-.05 1.58-.74 2.97-.74 1.38 0 1.77.74 2.98.72 1.24-.02 2.02-1.12 2.77-2.23.87-1.28 1.23-2.52 1.25-2.58-.03-.01-2.4-.92-2.41-3.66zM14.1 5.86c.63-.77 1.06-1.83.94-2.89-.91.04-2.02.61-2.67 1.37-.58.67-1.1 1.76-.96 2.8 1.02.08 2.06-.52 2.69-1.28z"/></svg>
+          Install App
+        </a>
+        <a class="btn btn-coffee" href="https://www.buymeacoffee.com/3rr0r303yt" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><path d="M6 2v2M10 2v2M14 2v2"/></svg>
+          Buy Me a Coffee
+        </a>
+      </div>
+
+      <p id="device-note" class="device-note">
+        Open this page in <strong>Safari</strong> on your iPhone or iPad to install.
+      </p>
+    </div>
+  </header>
+
+  <main>
+    <!-- ---------- Web Signer ---------- -->
+    <section id="signer">
+      <div class="container">
+        <div class="section-head">
+          <div class="eyebrow">Web Signer</div>
+          <h2>Sign any IPA and install it from Safari</h2>
+          <p>
+            Drop in an IPA, your .p12 certificate and provisioning profile. Everything is checked in your browser,
+            then signed with <a href="https://github.com/zhlynn/zsign" target="_blank" rel="noopener">zsign</a> in
+            GitHub Actions on your own repository, and you get an install button.
+          </p>
+        </div>
+
+        <div class="signer-grid">
+          <div class="card signer-card">
+            <h3>1. Files</h3>
+            <p>Drop all three files at once, or pick them one by one.</p>
+
+            <label class="dropzone" id="ws-drop-ipa">
+              <input type="file" id="ws-ipa-input" multiple aria-label="IPA file">
+              <div class="dropzone-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="3"/><path d="M11 18h2"/></svg>
+                App (.ipa)
+              </div>
+              <div class="dropzone-name" id="ws-ipa-name">Drop an .ipa here or tap to choose</div>
+            </label>
+            <ul class="ws-checks" id="ws-ipa-result"></ul>
+
+            <label class="dropzone" id="ws-drop-p12">
+              <input type="file" id="ws-p12-input" multiple aria-label="Certificate file">
+              <div class="dropzone-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="m10.85 12.15 8.65-8.65M18 5l2 2M15 8l2 2"/></svg>
+                Certificate (.p12)
+              </div>
+              <div class="dropzone-name" id="ws-p12-name">Drop a .p12 here or tap to choose</div>
+            </label>
+            <label class="field">
+              <span>Certificate password</span>
+              <input type="password" id="ws-p12-password" autocomplete="off">
+            </label>
+            <ul class="ws-checks" id="ws-p12-result"></ul>
+
+            <label class="dropzone" id="ws-drop-profile">
+              <input type="file" id="ws-profile-input" multiple aria-label="Provisioning profile">
+              <div class="dropzone-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 15l2 2 4-4"/></svg>
+                Provisioning profile (.mobileprovision)
+              </div>
+              <div class="dropzone-name" id="ws-profile-name">Drop a .mobileprovision here or tap to choose</div>
+            </label>
+            <ul class="ws-checks" id="ws-profile-result"></ul>
+
+            <details class="ws-more">
+              <summary>Advanced</summary>
+              <label class="field">
+                <span>Your device UDID (optional, checks that it's in the profile)</span>
+                <input type="text" id="ws-udid" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="00008110-001A2B3C4D5E6F70">
+              </label>
+              <label class="field">
+                <span>New bundle ID (optional)</span>
+                <input type="text" id="ws-bundle-id" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Keep the app's bundle ID">
+              </label>
+              <label class="field">
+                <span>New display name (optional)</span>
+                <input type="text" id="ws-display-name" autocomplete="off" maxlength="64">
+              </label>
+            </details>
+            <ul class="ws-checks" id="ws-cross-result"></ul>
+          </div>
+
+          <div class="card signer-card">
+            <h3>2. Sign &amp; install</h3>
+            <p>Signing runs in GitHub Actions on your repository (a fork of this one).</p>
+
+            <label class="field">
+              <span>Repository</span>
+              <input type="text" id="ws-repo" placeholder="owner/repository" autocomplete="off" autocapitalize="off" spellcheck="false">
+            </label>
+            <label class="field">
+              <span>GitHub access token</span>
+              <input type="password" id="ws-token" placeholder="github_pat_…" autocomplete="off">
+            </label>
+            <label class="check"><input type="checkbox" id="ws-remember"> Remember the token on this device</label>
+
+            <details class="ws-more">
+              <summary>Which token do I need?</summary>
+              <p>
+                Create a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">fine-grained token</a>
+                for your repository only, with these repository permissions:
+              </p>
+              <ul>
+                <li><strong>Contents</strong>: Read and write</li>
+                <li><strong>Actions</strong>: Read and write</li>
+                <li><strong>Secrets</strong>: Read and write</li>
+                <li><strong>Pages</strong>: Read and write (optional, used to speed up publishing)</li>
+              </ul>
+              <p>The token is only sent to api.github.com. Unless you tick “Remember”, it's forgotten when you close the tab.</p>
+            </details>
+
+            <button type="button" class="btn btn-primary" id="ws-start" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+              Sign &amp; prepare install
+            </button>
+            <div class="ws-hint" id="ws-start-hint"></div>
+
+            <ol class="ws-steps" id="ws-steps" hidden></ol>
+            <div class="ws-error" id="ws-error" role="alert" hidden></div>
+
+            <div class="ws-result" id="ws-result" hidden>
+              <h4>Ready to install</h4>
+              <a class="btn btn-primary" id="ws-install-btn" href="#">Install signed app</a>
+              <div class="ws-qr" id="ws-qr" aria-label="QR code for the install page"></div>
+              <p>Not on your iPhone? Scan this code, or open:<br><a id="ws-share-link" href="#"></a></p>
+              <div class="links">
+                <a id="ws-manifest-link" href="#" target="_blank" rel="noopener">manifest.plist</a>
+                <a id="ws-run-link" href="#" target="_blank" rel="noopener" hidden>Workflow run</a>
+              </div>
+            </div>
+
+            <details class="ws-more" style="margin-top:18px">
+              <summary>What happens to my files?</summary>
+              <ul>
+                <li>The IPA, certificate and profile are checked locally. Nothing is uploaded until you press the button.</li>
+                <li>Your .p12, its password and the profile are encrypted in your browser with your repository's public key and stored as GitHub Actions secrets.</li>
+                <li>The IPA is encrypted with a one-time AES key and uploaded to a temporary branch.</li>
+                <li>After signing, the secrets and the temporary branch are deleted.</li>
+                <li>The <strong>signed</strong> IPA is published in the <code>websigner</code> release so iOS can download it. Anyone with the link can download it.</li>
+                <li>Whether Apple has revoked your certificate can't be checked from the browser.</li>
+              </ul>
+            </details>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- Features ---------- -->
+    <section id="features">
+      <div class="container">
+        <div class="section-head">
+          <div class="eyebrow">Why WebSigner</div>
+          <h2>Everything you need, nothing you don't</h2>
+          <p>Sign and install IPA files directly on your device, right from Safari.</p>
+        </div>
+
+        <div class="grid">
+          <div class="card">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+            <h3>One-tap OTA install</h3>
+            <p>Uses Apple's native over-the-air installation. No sideloading tools or desktop apps needed.</p>
+          </div>
+          <div class="card">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+            <h3>Sign your own IPAs</h3>
+            <p>Bring your own certificate and provisioning profile and re-sign apps on the fly.</p>
+          </div>
+          <div class="card">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <h3>Anti-revoke friendly</h3>
+            <p>Pair it with a DNS profile to block Apple's certificate revocation checks. See the guide below.</p>
+          </div>
+          <div class="card">
+            <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></div>
+            <h3>100% open source</h3>
+            <p>Licensed under GPL-3.0. Audit the code, fork it, and contribute on GitHub.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- DNS / Anti-Revoke Guide ---------- -->
+    <section id="guide">
+      <div class="container">
+        <div class="section-head">
+          <div class="eyebrow">DNS / Anti-Revoke Guide</div>
+          <h2>Keep your apps from being revoked</h2>
+          <p>
+            iOS checks with Apple whether a signing certificate is still valid. If Apple
+            revokes it, your apps stop opening. Blocking those checks with NextDNS
+            helps keep installed apps working.
+          </p>
+        </div>
+
+        <div class="steps">
+          <div class="step">
+            <h3>Create a free NextDNS account</h3>
+            <p>
+              Go to <a href="https://my.nextdns.io/signup" target="_blank" rel="noopener">my.nextdns.io</a>
+              and sign up. A new configuration is created for you, with an ID like <code>abc123</code>.
+            </p>
+          </div>
+
+          <div class="step">
+            <h3>Block Apple's revocation servers</h3>
+            <p>Open the <strong>Denylist</strong> tab and add the following domain:</p>
+            <div class="domain-list">
+              <span class="domain required">ppq.apple.com <button type="button" data-copy="ppq.apple.com">Copy</button></span>
+            </div>
+            <p style="margin-top:12px">
+              <code>ppq.apple.com</code> is the server iOS asks to check whether an app's certificate is still valid.
+              Blocking it is enough for most users.
+            </p>
+            <p style="margin-top:10px">Optional, for stronger protection (may affect some Apple services):</p>
+            <div class="domain-list">
+              <span class="domain">ocsp.apple.com <button type="button" data-copy="ocsp.apple.com">Copy</button></span>
+              <span class="domain">ocsp2.apple.com <button type="button" data-copy="ocsp2.apple.com">Copy</button></span>
+              <span class="domain">crl.apple.com <button type="button" data-copy="crl.apple.com">Copy</button></span>
+              <span class="domain">valid.apple.com <button type="button" data-copy="valid.apple.com">Copy</button></span>
+            </div>
+          </div>
+
+          <div class="step">
+            <h3>Install the NextDNS profile on your device</h3>
+            <p>On your iPhone or iPad, in Safari:</p>
+            <ul>
+              <li>In NextDNS, open the <strong>Setup</strong> tab and choose <strong>Apple</strong>, or go straight to <a href="https://apple.nextdns.io" target="_blank" rel="noopener">apple.nextdns.io</a>.</li>
+              <li>Enter your configuration ID and tap <strong>Download</strong>.</li>
+              <li>Go to <strong>Settings &rarr; General &rarr; VPN &amp; Device Management</strong>, tap the downloaded profile and choose <strong>Install</strong>.</li>
+            </ul>
+          </div>
+
+          <div class="step">
+            <h3>Verify DNS is active</h3>
+            <p>
+              Visit <a href="https://test.nextdns.io" target="_blank" rel="noopener">test.nextdns.io</a>.
+              It should show <code>"status": "ok"</code> along with your configuration ID.
+            </p>
+          </div>
+
+          <div class="step">
+            <h3>Install and trust the app</h3>
+            <p>With DNS active, tap <strong>Install App</strong> above. When it finishes:</p>
+            <ul>
+              <li>Go to <strong>Settings &rarr; General &rarr; VPN &amp; Device Management</strong>, select the developer certificate and tap <strong>Trust</strong>.</li>
+              <li>If iOS asks you to, turn on <strong>Developer Mode</strong> under <strong>Settings &rarr; Privacy &amp; Security</strong>.</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="callout">
+          <strong>Heads up:</strong> Keep the NextDNS profile enabled at all times, including on cellular. If it is off
+          even briefly while your device reaches Apple, a revoked certificate can take effect. DNS blocking lowers the
+          risk of revocation but cannot guarantee it won't happen, and Apple may change its servers at any time.
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- Support ---------- -->
+    <section id="support">
+      <div class="container">
+        <div class="support-card">
+          <h2>Enjoying WebSigner? ☕</h2>
+          <p>
+            WebSigner is free and always will be. If it saved you some time, consider buying me a coffee.
+            It helps pay for certificates and keeps the project going.
+          </p>
+          <div class="cta-row">
+            <a class="btn btn-coffee" href="https://www.buymeacoffee.com/3rr0r303yt" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><path d="M6 2v2M10 2v2M14 2v2"/></svg>
+              Buy Me a Coffee
+            </a>
+            <a class="btn btn-ghost" href="https://github.com/Real3rr0r303YT/Websigner-iOS" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.1.79-.25.79-.56v-2c-3.2.7-3.87-1.37-3.87-1.37-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.03 1.76 2.69 1.25 3.35.96.1-.74.4-1.25.73-1.54-2.56-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.18-3.1-.12-.29-.51-1.46.11-3.04 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.58.23 2.75.11 3.04.74.81 1.18 1.84 1.18 3.1 0 4.42-2.69 5.39-5.25 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+              Star on GitHub
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="license">
+        <span class="license-badge">GPL-3.0</span>
+        <span>
+          &copy; <span id="year">2026</span> WebSigner contributors. Released under the
+          <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GNU General Public License v3.0</a>.
+        </span>
+      </div>
+      <div class="links">
+        <a href="LICENSE">License</a>
+        <a href="https://github.com/Real3rr0r303YT/Websigner-iOS" target="_blank" rel="noopener">Source</a>
+        <a href="https://www.buymeacoffee.com/3rr0r303yt" target="_blank" rel="noopener">Donate</a>
+      </div>
+    </div>
+  </footer>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (function () {
+      document.getElementById("year").textContent = new Date().getFullYear();
+
+      // OTA installs only work in Safari on iOS / iPadOS.
+      var ua = navigator.userAgent;
+      var isIOS = /iPad|iPhone|iPod/.test(ua) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); // iPadOS reports as Mac
+      var isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA/.test(ua);
+      var note = document.getElementById("device-note");
+
+      // Point the install link at the manifest next to this page, so it always
+      // matches the real (case-sensitive) Pages URL. Falls back to the static
+      // href when opened from a non-HTTPS origin such as a local file.
+      if (location.protocol === "https:") {
+        var manifestUrl = new URL("manifest.plist", location.href).href;
+        document.getElementById("install-btn").href =
+          "itms-services://?action=download-manifest&url=" + encodeURIComponent(manifestUrl);
+      }
+
+      if (!isIOS) {
+        note.classList.add("warn");
+        note.innerHTML = "You're not on an iPhone or iPad. Open this page in <strong>Safari</strong> on your iOS device to install.";
+      } else if (!isSafari) {
+        note.classList.add("warn");
+        note.innerHTML = "Other browsers can't install apps. Please reopen this page in <strong>Safari</strong>.";
+      } else {
+        note.innerHTML = "After tapping <strong>Install</strong>, go to your Home Screen to watch the download.";
+      }
+
+      // Copy-to-clipboard for denylist domains.
+      var toast = document.getElementById("toast");
+      var timer;
+      function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add("show");
+        clearTimeout(timer);
+        timer = setTimeout(function () { toast.classList.remove("show"); }, 1800);
+      }
+      document.querySelectorAll("[data-copy]").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var text = btn.getAttribute("data-copy");
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(
+              function () { showToast("Copied " + text); },
+              function () { showToast(text); }
+            );
+          } else {
+            showToast(text);
+          }
+        });
+      });
+    })();
+  </script>
+  <script src="vendor/jszip.min.js"></script>
+  <script src="vendor/forge.min.js"></script>
+  <script src="vendor/nacl-fast.min.js"></script>
+  <script src="vendor/sealedbox.js"></script>
+  <script src="vendor/qrcode.js"></script>
+  <script src="js/plist.js"></script>
+  <script src="js/signer.js"></script>
+</body>
+</html>
