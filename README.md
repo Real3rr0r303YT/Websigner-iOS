@@ -4,7 +4,7 @@
 
 [![Version](https://img.shields.io/badge/version-v1.3.0-4f8cff.svg)](https://github.com/Real3rr0r303YT/Websigner-iOS/releases/tag/v1.3.0)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?logo=buymeacoffee&logoColor=black)](https://www.buymeacoffee.com/3rr0r303yt)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/3rr0r303YT)
 
 **Landing page:** https://real3rr0r303yt.github.io/Websigner-iOS/  
 **Current version:** v1.3.0
@@ -240,7 +240,7 @@ iOS checks with Apple whether an app's signing certificate is still valid. If Ap
 
 If WebSigner is useful to you, consider supporting development:
 
-<a href="https://www.buymeacoffee.com/3rr0r303yt"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buymeacoffee&logoColor=black" alt="Buy Me a Coffee"></a>
+<a href="https://buymeacoffee.com/3rr0r303YT"><img src="https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buymeacoffee&logoColor=black" alt="Buy Me a Coffee"></a>
 
 ## Contributing
 
@@ -268,3 +268,7 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 ```
+
+---
+
+<p align="center"><b>Made by <a href="https://github.com/Real3rr0r303YT">Real3rr0r303YT</a></b> · GPL-3.0</p>
