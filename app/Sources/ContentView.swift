@@ -4,7 +4,7 @@ struct ContentView: View {
     private let landingPage = URL(string: "https://real3rr0r303yt.github.io/Websigner-iOS/")!
     private let guide = URL(string: "https://real3rr0r303yt.github.io/Websigner-iOS/#guide")!
     private let source = URL(string: "https://github.com/Real3rr0r303YT/Websigner-iOS")!
-    private let donate = URL(string: "https://www.buymeacoffee.com/3rr0r303yt")!
+    private let donate = URL(string: "https://buymeacoffee.com/3rr0r303YT")!
 
     private var version: String {
         let info = Bundle.main.infoDictionary
