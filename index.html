@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="WebSigner — an open-source direct web installer and signer for iOS. Install apps over the air, no computer required.">
+  <meta name="description" content="WebSigner by Real3rr0r303YT: an open-source web signer for iOS. Sign any IPA with your own certificate and install it from Safari.">
   <meta name="theme-color" content="#0b0d12">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -537,33 +537,23 @@
         <a class="btn btn-primary" id="ws-install-direct" href="#">Install</a>
         <p class="device-note">After tapping Install, go to your Home Screen to watch the download.</p>
       </div>
-      <span class="badge"><span class="dot"></span> v1.3.0 &middot; Open source &middot; GPL-3.0</span>
+      <span class="badge"><span class="dot"></span> v1.3.1 &middot; Open source &middot; GPL-3.0</span>
       <h1>Install iOS apps<br><span class="gradient-text">straight from the web.</span></h1>
       <p class="lead">
-        WebSigner is a free, open-source direct web installer and signer for iOS.
-        No computer, no cables, no App Store. Just tap and install.
+        WebSigner is a free, open-source web signer for iOS. Sign any IPA with your own
+        certificate and install it right from Safari. No cables, no App Store.
       </p>
 
       <div class="cta-row">
-        <!--
-          OTA install link. Replace the url= value with the HTTPS URL of YOUR
-          manifest.plist (URL-encoded). It must be served over HTTPS with a
-          valid certificate. GitHub Pages works out of the box.
-        -->
-        <a id="install-btn" class="btn btn-primary"
-           href="itms-services://?action=download-manifest&amp;url=https%3A%2F%2Freal3rr0r303yt.github.io%2FWebsigner-iOS%2Fmanifest.plist">
-          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.37 12.62c-.02-2.3 1.88-3.4 1.96-3.46-1.07-1.56-2.73-1.78-3.32-1.8-1.41-.14-2.76.83-3.47.83-.72 0-1.82-.81-2.99-.79-1.54.02-2.96.9-3.75 2.27-1.6 2.78-.41 6.89 1.15 9.14.76 1.1 1.67 2.34 2.86 2.3 1.15-.05 1.58-.74 2.97-.74 1.38 0 1.77.74 2.98.72 1.24-.02 2.02-1.12 2.77-2.23.87-1.28 1.23-2.52 1.25-2.58-.03-.01-2.4-.92-2.41-3.66zM14.1 5.86c.63-.77 1.06-1.83.94-2.89-.91.04-2.02.61-2.67 1.37-.58.67-1.1 1.76-.96 2.8 1.02.08 2.06-.52 2.69-1.28z"/></svg>
-          Install App
+        <a class="btn btn-primary" href="#signer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          Sign an IPA
         </a>
         <a class="btn btn-coffee" href="https://buymeacoffee.com/3rr0r303YT" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><path d="M6 2v2M10 2v2M14 2v2"/></svg>
           Buy Me a Coffee
         </a>
       </div>
-
-      <p id="device-note" class="device-note">
-        Open this page in <strong>Safari</strong> on your iPhone or iPad to install.
-      </p>
     </div>
   </header>
 
@@ -798,7 +788,7 @@
 
           <div class="step">
             <h3>Install and trust the app</h3>
-            <p>With DNS active, tap <strong>Install App</strong> above. When it finishes:</p>
+            <p>With DNS active, sign your app with the <a href="#signer">Web Signer</a> above and tap <strong>Install signed app</strong>. When it finishes:</p>
             <ul>
               <li>Go to <strong>Settings &rarr; General &rarr; VPN &amp; Device Management</strong>, select the developer certificate and tap <strong>Trust</strong>.</li>
               <li>If iOS asks you to, turn on <strong>Developer Mode</strong> under <strong>Settings &rarr; Privacy &amp; Security</strong>.</li>
@@ -843,7 +833,8 @@
       <div class="license">
         <span class="license-badge">GPL-3.0</span>
         <span>
-          &copy; <span id="year">2026</span> WebSigner contributors. Released under the
+          Made by <a href="https://github.com/Real3rr0r303YT" target="_blank" rel="noopener"><strong>Real3rr0r303YT</strong></a>
+          &middot; &copy; <span id="year">2026</span> &middot; Released under the
           <a href="https://www.gnu.org/licenses/gpl-3.0.html" target="_blank" rel="noopener">GNU General Public License v3.0</a>.
         </span>
       </div>
@@ -860,32 +851,6 @@
   <script>
     (function () {
       document.getElementById("year").textContent = new Date().getFullYear();
-
-      // OTA installs only work in Safari on iOS / iPadOS.
-      var ua = navigator.userAgent;
-      var isIOS = /iPad|iPhone|iPod/.test(ua) ||
-        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); // iPadOS reports as Mac
-      var isSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA/.test(ua);
-      var note = document.getElementById("device-note");
-
-      // Point the install link at the manifest next to this page, so it always
-      // matches the real (case-sensitive) Pages URL. Falls back to the static
-      // href when opened from a non-HTTPS origin such as a local file.
-      if (location.protocol === "https:") {
-        var manifestUrl = new URL("manifest.plist", location.href).href;
-        document.getElementById("install-btn").href =
-          "itms-services://?action=download-manifest&url=" + encodeURIComponent(manifestUrl);
-      }
-
-      if (!isIOS) {
-        note.classList.add("warn");
-        note.innerHTML = "You're not on an iPhone or iPad. Open this page in <strong>Safari</strong> on your iOS device to install.";
-      } else if (!isSafari) {
-        note.classList.add("warn");
-        note.innerHTML = "Other browsers can't install apps. Please reopen this page in <strong>Safari</strong>.";
-      } else {
-        note.innerHTML = "After tapping <strong>Install</strong>, go to your Home Screen to watch the download.";
-      }
 
       // Copy-to-clipboard for denylist domains.
       var toast = document.getElementById("toast");

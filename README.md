@@ -1,13 +1,14 @@
 # WebSigner for iOS
 
-> An open-source direct web installer and signer for iOS. Install apps over the air from Safari, with no computer, cables or App Store.
+> An open-source web signer for iOS by **Real3rr0r303YT**. Sign any IPA with your own certificate and install it over the air from Safari, with no cables or App Store.
 
-[![Version](https://img.shields.io/badge/version-v1.3.0-4f8cff.svg)](https://github.com/Real3rr0r303YT/Websigner-iOS/releases/tag/v1.3.0)
+[![Version](https://img.shields.io/badge/version-v1.3.1-4f8cff.svg)](https://github.com/Real3rr0r303YT/Websigner-iOS/releases/tag/v1.3.1)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/3rr0r303YT)
 
 **Landing page:** https://real3rr0r303yt.github.io/Websigner-iOS/  
-**Current version:** v1.3.0
+**Current version:** v1.3.1  
+**Made by:** [Real3rr0r303YT](https://github.com/Real3rr0r303YT)
 
 ---
 
@@ -39,9 +40,9 @@
 
 ## Installing the app (users)
 
-1. Open the [landing page](https://real3rr0r303yt.github.io/Websigner-iOS/) in **Safari** on your iPhone or iPad.
-2. *(Recommended)* Set up the anti-revoke DNS first. See [below](#dns--anti-revoke-guide).
-3. Tap **Install App** and confirm the prompt.
+1. *(Recommended)* Set up the anti-revoke DNS first. See [below](#dns--anti-revoke-guide).
+2. Sign your IPA with the [Web Signer](#web-signer-sign-any-ipa-in-the-browser) on the [landing page](https://real3rr0r303yt.github.io/Websigner-iOS/#signer).
+3. Tap **Install signed app** in **Safari** on your iPhone or iPad, or scan the QR code, and confirm the prompt.
 4. Go to **Settings → General → VPN & Device Management**, select the developer certificate and tap **Trust**.
 5. If asked, turn on **Developer Mode** in **Settings → Privacy & Security**.
 
@@ -126,7 +127,7 @@ The workflow reads the bundle ID, team ID and export method from the profile, so
    - validates it with `tools/check_ipa.py`,
    - creates the GitHub Release `v1.2.0` and uploads `WebSigner.ipa` to it,
    - regenerates `manifest.plist` (`bundle-identifier`, `bundle-version` `1.2.0`, `kind` `software`, `title`, and the direct `.ipa` download URL) and commits it.
-3. When GitHub Pages has redeployed, open the landing page in Safari and tap **Install App**.
+3. When GitHub Pages has redeployed, open `itms-services://?action=download-manifest&url=https://<username>.github.io/<repo>/manifest.plist` in Safari on the device. The landing page has no fixed install button for this build. Use the Web Signer for everyday installs.
 
 Pushing a tag such as `v1.2.0` runs the same workflow.
 
@@ -160,16 +161,6 @@ python3 tools/check_ipa.py WebSigner.ipa --udid <your-device-UDID>
 ```
 
 This checks the archive layout, arm64 binary, code signature, profile type and expiry, App ID vs. bundle ID, extension bundle IDs, and whether your UDID is in the profile.
-
-### How the Install button works
-
-When served over HTTPS, `index.html` builds the install link from its own address:
-
-```
-itms-services://?action=download-manifest&url=<URL-encoded HTTPS URL of manifest.plist next to the page>
-```
-
-The link therefore always points at the right `manifest.plist`, even in a fork or under a renamed repository. The static `href` on `#install-btn` is only a fallback for when the page isn't served over HTTPS.
 
 **Requirements for OTA installs:**
 
@@ -210,6 +201,12 @@ iOS checks with Apple whether an app's signing certificate is still valid. If Ap
 > ⚠️ Keep the profile enabled at all times, including on cellular. DNS blocking lowers the risk of revocation but cannot guarantee it won't happen.
 
 ## Changelog
+
+### v1.3.1
+- Removed the fixed **Install App** button and its note from the landing page. Installs now go through the Web Signer, which signs each IPA for your devices.
+- Added a **Sign an IPA** button in the header that jumps to the Web Signer.
+- Added **Made by Real3rr0r303YT** branding to the page footer and the README. The GPL-3.0 notice stays in the footer.
+- Buy Me a Coffee links point to https://buymeacoffee.com/3rr0r303YT.
 
 ### v1.3.0
 - Added the **Web Signer**: upload an IPA, `.p12` and provisioning profile on the landing page (drag & drop or file picker), then sign it and install it with `itms-services://`.
@@ -271,4 +268,4 @@ GNU General Public License for more details.
 
 ---
 
-<p align="center"><b>Made by <a href="https://github.com/Real3rr0r303YT">Real3rr0r303YT</a></b></p>
+<p align="center"><b>Made by <a href="https://github.com/Real3rr0r303YT">Real3rr0r303YT</a></b> · GPL-3.0</p>
